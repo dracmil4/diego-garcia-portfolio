@@ -101,16 +101,31 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<HTMLDivElement>(null);
   const proxyRef = useRef({ chars: 0 });
+  const audioRef = useRef(new Audio('/audio/keyboard-typing.mp3'));
 
   useEffect(() => {
     setIsMobile(window.innerWidth < 768);
     setIsMounted(true);
   }, []);
 
+  // Audio config once; also ensure silence/cleanup when the component unmounts.
+  useEffect(() => {
+    const audio = audioRef.current;
+    audio.volume = 0.4;
+    audio.loop = true;
+    return () => {
+      gsap.killTweensOf(audio);
+      audio.pause();
+      audio.currentTime = 0;
+    };
+  }, []);
+
+  // Auto-start typewriter (visual first). Audio stays muted during typing to
+  // respect the browser autoplay policy; sound only fires on the transition click.
   useEffect(() => {
     const proxy = proxyRef.current;
 
-    gsap.to(proxy, {
+    const tween = gsap.to(proxy, {
       chars: TOTAL_CHARS,
       duration: TYPING_DURATION,
       ease: 'none',
@@ -128,10 +143,36 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
     };
   }, []);
 
+  // Short keyboard burst (fade-in/out) fired on the single transition click,
+  // where the browser has granted audio permission.
+  const playKeyburst = useCallback(() => {
+    const audio = audioRef.current;
+    audio.volume = 0;
+    audio.currentTime = 0;
+    const p = audio.play();
+    if (p && typeof p.catch === 'function') p.catch(() => {});
+    gsap.to(audio, { volume: 0.4, duration: 0.1, ease: 'power1.out' });
+    gsap.to(audio, {
+      volume: 0,
+      duration: 0.6,
+      delay: 0.4,
+      ease: 'power1.in',
+      onComplete: () => {
+        audio.pause();
+        audio.currentTime = 0;
+        audio.volume = 0.4;
+      },
+    });
+  }, []);
+
   const triggerTransition = useCallback(() => {
     if (isAnimating) return;
     setIsAnimating(true);
     gsap.killTweensOf(proxyRef.current);
+
+    // The only click of the intro: the browser now authorizes audio, so play
+    // a short keyboard burst synced with the massive GSAP zoom-in.
+    playKeyburst();
 
     if (isMobile || !svgRef.current || !containerRef.current) {
       gsap.to(containerRef.current, {
@@ -169,7 +210,7 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
       opacity: 0,
       duration: 0.3,
     }, 1.1);
-  }, [isAnimating, onComplete, isMobile]);
+  }, [isAnimating, onComplete, isMobile, playKeyburst]);
 
   useEffect(() => {
     if (!showCta) return;
@@ -278,7 +319,7 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
   return (
     <div
       ref={containerRef}
-      onClick={triggerTransition}
+      onClick={showCta ? triggerTransition : undefined}
       className="fixed inset-0 z-[100] bg-[#0a0e14] app-full-screen flex items-center justify-center cursor-pointer overflow-hidden"
     >
       <div
@@ -316,7 +357,7 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
             </g>
           )}
 
-          {showCta && !isAnimating && (
+{showCta && !isAnimating && (
             <text
               x={TEXT_START_X}
               y={TEXT_START_Y + LINE_STRINGS.length * LINE_HEIGHT + 20}
