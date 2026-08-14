@@ -202,6 +202,29 @@ Me comunico bien con personas técnicas y no técnicas — puedo explicar qué e
 `
       },
       {
+        id: 'arquitectura_sistemas.json',
+        name: 'arquitectura_sistemas.json',
+        type: 'file',
+        extension: 'json',
+        path: '/educacion/arquitectura_sistemas.json',
+        content: `{
+  "course": "Mastering Software Architecture Patterns and System Design",
+  "platform": "Udemy (En Curso - 2026)",
+  "focus": "Enterprise Systems & Scalable Architecture",
+  "core_patterns": [
+    "Clean Architecture",
+    "Hexagonal & Onion Architecture",
+    "Microservices & Event-Driven Systems"
+  ],
+  "system_design_skills": [
+    "API Gateways & BFF (Backend For Frontend) Patterns",
+    "CQRS & Event Sourcing core principles",
+    "Fault Tolerance & Resilience (Circuit Breakers, Retries)",
+    "Distributed Systems Scalability & Trade-offs analysis"
+  ]
+}`
+      },
+      {
         id: 'certificaciones.json',
         name: 'certificaciones.json',
         type: 'file',
