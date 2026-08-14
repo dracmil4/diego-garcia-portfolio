@@ -183,7 +183,7 @@ export default function Home() {
         <BootSequence onComplete={handleBootComplete} />
       )}
       <motion.div
-        className={`h-screen w-screen flex flex-col overflow-hidden ${getThemeClass()} ${isRedAlert ? 'bg-rose-950 glitch-effect' : ''}`}
+        className={`app-full-screen flex flex-col overflow-hidden ${getThemeClass()} ${isRedAlert ? 'bg-rose-950 glitch-effect' : ''}`}
         initial={{ opacity: 0 }}
         animate={{ opacity: showBoot ? 0 : 1 }}
         transition={{ duration: 0.6, ease: 'easeOut' }}

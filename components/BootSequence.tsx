@@ -279,7 +279,7 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
     <div
       ref={containerRef}
       onClick={triggerTransition}
-      className="fixed inset-0 z-[100] bg-[#0a0e14] h-screen w-screen flex items-center justify-center cursor-pointer overflow-hidden"
+      className="fixed inset-0 z-[100] bg-[#0a0e14] app-full-screen flex items-center justify-center cursor-pointer overflow-hidden"
     >
       <div
         ref={svgRef}

@@ -5,6 +5,13 @@ export const metadata = {
   description: 'Portafolio interactivo de Diego Garcia Chungara — Ingeniero de Sistemas, desarrollador web y móvil. UCB Tarija, Bolivia.',
 };
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: '#0a0e14',
+};
+
 export default function RootLayout({
   children,
 }: {

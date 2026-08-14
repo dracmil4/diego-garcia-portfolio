@@ -533,7 +533,7 @@ export default function MobileLayout({
       </AnimatePresence>
 
       {/* ── BOTTOM NAV ──────────────────────────── */}
-      <nav className="shrink-0 border-t border-[var(--border-color)] bg-[var(--sidebar-bg)] flex items-stretch relative">
+      <nav className="shrink-0 border-t border-[var(--border-color)] bg-[var(--sidebar-bg)] flex items-stretch relative safe-bottom">
         {NAV_ITEMS.map(({ id, label, Icon }) => {
           const isActive = activeSection === id;
           return (

@@ -17,7 +17,7 @@ const THEME_LABELS: Record<ThemeType, string> = {
 
 export default function StatusBar({ currentTheme, onChangeTheme, onToggleTerminal }: StatusBarProps) {
   return (
-    <footer className="h-6 bg-[var(--accent-color)] px-3 flex items-center justify-between text-[11px] font-mono text-white/80 select-none z-30 shrink-0">
+    <footer className="safe-bottom h-auto min-h-6 bg-[var(--accent-color)] px-3 pt-0.5 flex items-center justify-between text-[11px] font-mono text-white/80 select-none z-30 shrink-0">
       {/* Left side */}
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-1.5 text-white cursor-default">
