@@ -144,24 +144,34 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const bootStartedRef = useRef(false);
 
-  // Montaje: detecta el dispositivo y precarga el audio (sin reproducirlo,
-  // para que sus metadatos estén listos al momento del desbloqueo).
+  // Montaje: detecta el dispositivo. El audio se crea bajo demanda dentro del
+  // primer gesto del usuario (mejor compatibilidad con el autoplay móvil).
   useEffect(() => {
     setIsMobile(window.innerWidth < 768);
     setIsMounted(true);
 
-    const audio = new Audio(AUDIO_SRC);
-    audio.preload = 'auto';
-    audio.volume = 0.4;
-    audio.loop = true;
-    audioRef.current = audio;
-
     return () => {
-      gsap.killTweensOf(audio);
-      audio.pause();
-      audio.currentTime = 0;
-      audio.src = '';
+      const audio = audioRef.current;
+      if (audio) {
+        gsap.killTweensOf(audio);
+        audio.pause();
+        audio.currentTime = 0;
+        audio.src = '';
+      }
     };
+  }, []);
+
+  // Crea (una sola vez) el elemento de audio dentro del gesto del usuario,
+  // lo que garantiza que el navegador autorice la reproducción también en móvil.
+  const getOrCreateAudio = useCallback(() => {
+    if (!audioRef.current) {
+      const audio = new Audio(AUDIO_SRC);
+      audio.preload = 'auto';
+      audio.volume = 0.4;
+      audio.loop = true;
+      audioRef.current = audio;
+    }
+    return audioRef.current;
   }, []);
 
   // Detiene el audio de tecleo con un fade-out rápido (o lo corta en seco).
@@ -187,13 +197,11 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
     bootStartedRef.current = true;
 
     // 1. Reproduce el audio de forma síncrona dentro del gesto del usuario
-    //    (tecla o clic), lo que autoriza el sonido sin restricciones.
-    const audio = audioRef.current;
-    if (audio) {
-      audio.currentTime = 0;
-      const p = audio.play();
-      if (p && typeof p.catch === 'function') p.catch(() => {});
-    }
+    //    (tecla, clic o toque), lo que autoriza el sonido sin restricciones.
+    const audio = getOrCreateAudio();
+    audio.currentTime = 0;
+    const p = audio.play();
+    if (p && typeof p.catch === 'function') p.catch(() => {});
 
     // 2. Oculta el prompt e inicia la línea de tiempo de GSAP.
     setPhase('typing');
@@ -220,12 +228,8 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
 
   // La escritura dura lo mismo que el clip de audio (5 s aprox.) para que
   // el tecleo suene en tiempo real y termine justo con "useful...".
-    if (audio) {
-      getAudioDuration(audio, AUDIO_FALLBACK_DURATION).then(runTimeline);
-    } else {
-      runTimeline(AUDIO_FALLBACK_DURATION);
-    }
-  }, [phase, stopAudio]);
+    getAudioDuration(audio, AUDIO_FALLBACK_DURATION).then(runTimeline);
+  }, [phase, stopAudio, getOrCreateAudio]);
 
   // Escucha global: cualquier tecla o clic/toque desbloquea el arranque.
   useEffect(() => {
@@ -234,10 +238,12 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
     window.addEventListener('keydown', handleUnlock);
     window.addEventListener('pointerdown', handleUnlock);
     window.addEventListener('touchstart', handleUnlock);
+    window.addEventListener('click', handleUnlock);
     return () => {
       window.removeEventListener('keydown', handleUnlock);
       window.removeEventListener('pointerdown', handleUnlock);
       window.removeEventListener('touchstart', handleUnlock);
+      window.removeEventListener('click', handleUnlock);
     };
   }, [phase, startTyping]);
 
