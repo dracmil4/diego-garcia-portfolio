@@ -1,10 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence, useDragControls } from 'framer-motion';
+import { motion, useDragControls } from 'framer-motion';
 import { FileItem, WindowItem } from '../types';
-import { ExternalLink, ChevronLeft, ChevronRight, Minus, Square, X, Circle, Signal, Wifi, Battery } from 'lucide-react';
+import { ExternalLink, Circle, Minus, Square, X } from 'lucide-react';
 import TechIcon from './TechIcon';
+import { getProjectDetails, STATUS_BADGE } from '../data/projects';
+import PhonePreview from './project/PhonePreview';
+import BrowserPreview from './project/BrowserPreview';
+import Lightbox from './project/Lightbox';
 
 interface FloatingWindowProps {
   window: WindowItem;
@@ -15,104 +19,13 @@ interface FloatingWindowProps {
   onFocus: (id: string) => void;
 }
 
-interface ProjectDetails {
-  title: string;
-  role: string;
-  stack: string[];
-  desc: string;
-  githubUrl: string;
-  images: string[];
-  highlights: string[];
-}
-
-const PROJECT_DEFAULTS: Record<string, ProjectDetails> = {
-  cbn_gestion_eventos: {
-    title: 'CBN — Sistema de Gestión de Eventos',
-    role: 'Software Developer',
-    stack: ['Node.js', 'TypeScript', 'Clean Architecture', 'Prisma ORM', 'Flutter', 'BLoC'],
-    desc: 'Backend robusto bajo Clean Architecture con Node.js y Prisma ORM. App móvil en Flutter (BLoC) con enfoque Offline-First.',
-    githubUrl: 'https://github.com/diego-garcia-chungara',
-    images: ['/images/proyectos/cbn-admin.png', '/images/proyectos/cbn-mobile.png'],
-    highlights: ['Panel de administración web', 'App móvil Flutter offline-first', 'Migraciones con Prisma'],
-  },
-  ucb_sistema_becas: {
-    title: 'UCB — Sistema de Becas Universitarias',
-    role: 'QA Junior / Colaborador Técnico',
-    stack: ['QA Testing', 'Clean Code', 'Git / Pull Requests', 'Requirements Engineering'],
-    desc: 'Definición de requerimientos, pruebas funcionales y revisión técnica de código del equipo.',
-    githubUrl: 'https://github.com/diego-garcia-chungara',
-    images: ['/images/proyectos/ucb-prs.png', '/images/proyectos/ucb-testing.png'],
-    highlights: ['Revisión de Pull Requests', 'Matriz de trazabilidad', 'Flujos de aprobación de becas'],
-  },
-  ucb_sistema_certificados: {
-    title: 'UCB — Sistema de Certificados Universitarios',
-    role: 'Proyecto Universitario',
-    stack: ['TypeScript', 'Node.js', 'PostgreSQL', 'Digital Validation'],
-    desc: 'Sistema de generación y validación digital de certificados académicos. Panel administrativo y certificado final.',
-    githubUrl: 'https://github.com/diego-garcia-chungara',
-    images: ['/images/proyectos/ucb-cert-panel.png', '/images/proyectos/ucb-cert-result.png'],
-    highlights: ['Panel de generación de certificados', 'Validación digital integrada', 'Trazabilidad en PostgreSQL'],
-  },
-  andean_ux_hobby_match: {
-    title: 'Hobby Match — App Móvil',
-    role: 'Software Developer',
-    stack: ['React Native', 'TypeScript', 'AsyncStorage', 'UI Locking'],
-    desc: 'App multiplataforma para conectar personas por intereses, con UI locking y persistencia local eficiente.',
-    githubUrl: 'https://github.com/diego-garcia-chungara',
-    images: ['/images/proyectos/hobby-match-1.png', '/images/proyectos/hobby-match-2.png', '/images/proyectos/hobby-match-3.png'],
-    highlights: ['Listas optimizadas con FlatList', 'Control de carga con UI locking', 'Caché local AsyncStorage'],
-  },
-};
-
-const STATUS_BADGE: Record<string, { label: string; color: string }> = {
-  'Production Ready': { label: 'Production', color: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' },
-  'Deployed':         { label: 'Deployed',   color: 'bg-blue-500/15 text-blue-400 border-blue-500/30' },
-  'Production':       { label: 'Production', color: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' },
-  'Academic Project': { label: 'Academic',   color: 'bg-amber-500/15 text-amber-400 border-amber-500/30' },
-};
-
 export default function FloatingWindow({ window: win, files, onClose, onMinimize, onMaximize, onFocus }: FloatingWindowProps) {
   const dragControls = useDragControls();
   const [currentImage, setCurrentImage] = useState(0);
   const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('landscape');
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
-  const getProjectDetails = (id: string): ProjectDetails & { status?: string } => {
-    const defaults = PROJECT_DEFAULTS[id] ?? {
-      title: win.title,
-      role: 'Software Engineer',
-      stack: ['TypeScript', 'React', 'Node.js'],
-      desc: 'Proyecto desarrollado bajo estándares de ingeniería de software.',
-      githubUrl: 'https://github.com/diego-garcia-chungara',
-      images: [],
-      highlights: [],
-    };
-
-    const jsonFile = files
-      .flatMap(folder => folder.children ?? [])
-      .find(file => file.name.replace(/\.[^.]+$/, '') === id);
-
-    if (jsonFile?.content) {
-      try {
-        const parsed = JSON.parse(jsonFile.content);
-        return {
-          title:     parsed.projectName || defaults.title,
-          role:      parsed.role        || defaults.role,
-          stack:     parsed.techStack   || defaults.stack,
-          desc:      parsed.description || defaults.desc,
-          githubUrl: parsed.githubUrl   || defaults.githubUrl,
-          images:    parsed.images      || defaults.images,
-          highlights: parsed.highlights || defaults.highlights,
-          status:    parsed.status,
-        };
-      } catch {
-        return defaults;
-      }
-    }
-    return defaults;
-  };
-
-  const project = getProjectDetails(win.id);
+  const project = getProjectDetails(win.id, win.title, files);
   const images = project.images.length > 0 ? project.images : [];
   const badge = STATUS_BADGE[project.status ?? ''];
 
@@ -128,27 +41,6 @@ export default function FloatingWindow({ window: win, files, onClose, onMinimize
 
   const nextImage = () => images.length && setCurrentImage(i => (i + 1) % images.length);
   const prevImage = () => images.length && setCurrentImage(i => (i - 1 + images.length) % images.length);
-
-  const carouselDots = (
-    <div className="flex items-center justify-center gap-2 pt-2">
-      <button onClick={prevImage} className="p-1 rounded hover:bg-white/10 text-[#484f58] hover:text-[#8b949e] transition-colors" aria-label="Anterior">
-        <ChevronLeft className="w-3.5 h-3.5" />
-      </button>
-      <div className="flex gap-1.5">
-        {images.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setCurrentImage(i)}
-            className={`w-1.5 h-1.5 rounded-full transition-all ${i === currentImage ? 'bg-[var(--accent-color)] w-3' : 'bg-white/20 hover:bg-white/40'}`}
-            aria-label={`Imagen ${i + 1}`}
-          />
-        ))}
-      </div>
-      <button onClick={nextImage} className="p-1 rounded hover:bg-white/10 text-[#484f58] hover:text-[#8b949e] transition-colors" aria-label="Siguiente">
-        <ChevronRight className="w-3.5 h-3.5" />
-      </button>
-    </div>
-  );
 
   const isMobile = typeof globalThis !== 'undefined' && (globalThis as unknown as { innerWidth: number }).innerWidth < 768;
 
@@ -306,73 +198,25 @@ export default function FloatingWindow({ window: win, files, onClose, onMinimize
           {/* Image gallery */}
           <div className="flex-1 flex flex-col min-h-0">
             {images.length > 0 ? (
-              <div className="flex-1 flex flex-col">
-                {orientation === 'portrait' ? (
-                  <div className="flex-1 flex flex-col items-center justify-center gap-3 rounded-lg bg-[#161b22] border border-[#21262d] p-4">
-                    <div className="relative bg-gradient-to-b from-[#2b2b2b] to-[#111] rounded-[2.6rem] p-[7px] shadow-[0_18px_60px_rgba(0,0,0,0.7)]">
-                      {/* Side hardware buttons */}
-                      <div className="absolute -left-[2.5px] top-20 w-[3px] h-7 rounded-l-md bg-[#2a2a2a]" />
-                      <div className="absolute -left-[2.5px] top-[7.5rem] w-[3px] h-12 rounded-l-md bg-[#2a2a2a]" />
-                      <div className="absolute -right-[2.5px] top-24 w-[3px] h-16 rounded-r-md bg-[#2a2a2a]" />
-                      <div className="relative w-36 aspect-[9/19] rounded-[2.1rem] overflow-hidden bg-black">
-                        {/* Status bar */}
-                        <div className="absolute top-0 inset-x-0 z-20 flex items-center justify-between pl-6 pr-3 h-6 pt-1 text-white text-[9px] font-semibold pointer-events-none">
-                          <span>9:41</span>
-                          <span className="flex items-center gap-1 text-white/90">
-                            <Signal className="w-3 h-3" />
-                            <Wifi className="w-3 h-3" />
-                            <Battery className="w-3.5 h-3.5" />
-                          </span>
-                        </div>
-                        {/* Dynamic island */}
-                        <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-16 h-[18px] bg-black rounded-full z-30" />
-                        <AnimatePresence mode="wait">
-                          <motion.img
-                            key={currentImage}
-                            src={images[currentImage]}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="w-full h-full object-cover cursor-zoom-in"
-                            onClick={() => setLightboxOpen(true)}
-                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                          />
-                        </AnimatePresence>
-                        {/* Home indicator */}
-                        <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-20 h-1 rounded-full bg-white/80 z-30 pointer-events-none" />
-                      </div>
-                    </div>
-                    {images.length > 1 && carouselDots}
-                  </div>
-                ) : (
-                  <div className="flex-1 flex flex-col rounded-lg bg-[#161b22] border border-[#21262d] overflow-hidden">
-                    <div className="flex items-center gap-1.5 h-6 px-2.5 bg-slate-800/50 border-b border-[#21262d] rounded-t-lg">
-                      <span className="w-2 h-2 rounded-full bg-slate-600/80" />
-                      <span className="w-2 h-2 rounded-full bg-slate-600/80" />
-                      <span className="w-2 h-2 rounded-full bg-slate-600/80" />
-                    </div>
-                    <div className="flex-1 relative flex items-center justify-center min-h-0 p-3">
-                      <AnimatePresence mode="wait">
-                        <motion.img
-                          key={currentImage}
-                          src={images[currentImage]}
-                          initial={{ opacity: 0, x: 8 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: -8 }}
-                          transition={{ duration: 0.2 }}
-                          className="max-w-full max-h-44 object-contain rounded cursor-zoom-in"
-                          onClick={() => setLightboxOpen(true)}
-                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                        />
-                      </AnimatePresence>
-                    </div>
-                    {images.length > 1 && (
-                      <div className="border-t border-[#21262d] p-2">{carouselDots}</div>
-                    )}
-                  </div>
-                )}
-              </div>
+              orientation === 'portrait' ? (
+                <PhonePreview
+                  images={images}
+                  currentImage={currentImage}
+                  onSelect={setCurrentImage}
+                  onPrev={prevImage}
+                  onNext={nextImage}
+                  onLightbox={() => setLightboxOpen(true)}
+                />
+              ) : (
+                <BrowserPreview
+                  images={images}
+                  currentImage={currentImage}
+                  onSelect={setCurrentImage}
+                  onPrev={prevImage}
+                  onNext={nextImage}
+                  onLightbox={() => setLightboxOpen(true)}
+                />
+              )
             ) : (
               <div className="flex-1 rounded-lg bg-[#161b22] border border-[#21262d] flex flex-col items-center justify-center gap-3 p-4">
                 <div className="w-10 h-10 rounded-xl bg-[var(--accent-color)]/10 border border-[var(--accent-color)]/20 flex items-center justify-center">
@@ -388,58 +232,14 @@ export default function FloatingWindow({ window: win, files, onClose, onMinimize
       </div>
 
       {/* Lightbox */}
-      <AnimatePresence>
-        {lightboxOpen && (
-          <motion.div
-            className="fixed inset-0 z-[120] bg-black/85 backdrop-blur-sm flex items-center justify-center p-6"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            onClick={() => setLightboxOpen(false)}
-          >
-            <button
-              className="absolute top-5 right-5 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors"
-              onClick={() => setLightboxOpen(false)}
-              aria-label="Cerrar"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            {images.length > 1 && (
-              <>
-                <button
-                  className="absolute left-5 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors"
-                  onClick={(e) => { e.stopPropagation(); prevImage(); }}
-                  aria-label="Anterior"
-                >
-                  <ChevronLeft className="w-6 h-6" />
-                </button>
-                <button
-                  className="absolute right-5 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors"
-                  onClick={(e) => { e.stopPropagation(); nextImage(); }}
-                  aria-label="Siguiente"
-                >
-                  <ChevronRight className="w-6 h-6" />
-                </button>
-              </>
-            )}
-
-            <AnimatePresence mode="wait">
-              <motion.img
-                key={currentImage}
-                src={images[currentImage]}
-                initial={{ opacity: 0, scale: 0.92 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.98 }}
-                transition={{ type: 'spring', stiffness: 260, damping: 26 }}
-                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-                onClick={(e) => e.stopPropagation()}
-              />
-            </AnimatePresence>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <Lightbox
+        open={lightboxOpen}
+        images={images}
+        currentImage={currentImage}
+        onClose={() => setLightboxOpen(false)}
+        onPrev={prevImage}
+        onNext={nextImage}
+      />
     </motion.div>
   );
 }

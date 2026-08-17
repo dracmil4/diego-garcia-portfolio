@@ -233,6 +233,12 @@ Me comunico bien con personas técnicas y no técnicas — puedo explicar qué e
         content: `{
   "certifications": [
     {
+      "title": "Mastering Software Architecture Patterns and System Design",
+      "institution": "Udemy",
+      "year": "2026",
+      "description": "Arquitectura de software escalable: Clean Architecture, Hexagonal, Onion, Microservices y Event-Driven (en curso)"
+    },
+    {
       "title": "Análisis de Datos con Power BI y R Studio",
       "institution": "UCB",
       "year": "2024",

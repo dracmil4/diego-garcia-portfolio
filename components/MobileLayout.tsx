@@ -6,13 +6,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FileItem, ThemeType, WindowItem } from '../types';
 import {
   User, FolderOpen, GraduationCap, Mail, Terminal as TerminalIcon,
-  ChevronRight, X, Play, ExternalLink, Menu,
-  Code2, Shield, Database, Globe, Briefcase, MapPin,
-  MessageCircle,
+  ChevronRight, X, Menu, Briefcase, MessageCircle, Code2,
 } from 'lucide-react';
 import { SOCIAL_LINKS, DISPLAY_NAME, TERMINAL_USER } from '../data/constants';
 import Terminal from './Terminal';
 import FloatingWindow from './FloatingWindow';
+import ProfileSection from './mobile/ProfileSection';
+import ProjectsSection from './mobile/ProjectsSection';
+import EducationSection from './mobile/EducationSection';
+import ContactSection from './mobile/ContactSection';
 
 interface MobileLayoutProps {
   files: FileItem[];
@@ -43,19 +45,6 @@ const NAV_ITEMS = [
   { id: 'contacto',  label: 'Contacto',  Icon: Mail },
 ];
 
-// Skills cards
-const SKILLS = [
-  { icon: Globe,    label: 'Web & Móvil',    desc: 'React, React Native, Flutter, Next.js' },
-  { icon: Code2,    label: 'Backend',        desc: 'Node.js, TypeScript, Express, APIs REST' },
-  { icon: Database, label: 'Bases de datos', desc: 'PostgreSQL, Prisma ORM, optimización' },
-  { icon: Shield,   label: 'Calidad (QA)',   desc: 'ISTQB CTFL 4.0, pruebas funcionales' },
-];
-
-// Parse JSON safely
-function parseJSON<T>(content?: string): T | null {
-  try { return content ? JSON.parse(content) : null; } catch { return null; }
-}
-
 export default function MobileLayout({
   files, windows, isTerminalOpen, isDrawerOpen, currentDir,
   onSelectFile, onDoubleClickFile, onRunProject, onChangeTheme,
@@ -69,10 +58,6 @@ export default function MobileLayout({
   const educFolder      = files.find(f => f.name === 'educacion');
   const projects        = proyectosFolder?.children ?? [];
   const certFile        = educFolder?.children?.find(f => f.name === 'certificaciones.json');
-
-  const certData = parseJSON<{
-    certifications: { title: string; institution?: string; year: string; description?: string }[];
-  }>(certFile?.content);
 
   // Navigate to section and close drawer
   const goToSection = (id: string) => {
@@ -224,73 +209,7 @@ export default function MobileLayout({
               transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
               className="px-5 py-8 space-y-8"
             >
-              {/* Hero */}
-              <div className="text-center space-y-4">
-                <div className="relative inline-block">
-                  <img
-                    src="/images/foto-perfil.png"
-                    alt={DISPLAY_NAME}
-                    className="w-24 h-24 rounded-full object-cover border-2 border-[var(--accent-color)] shadow-lg mx-auto"
-                    onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                  />
-                  <span className="absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-[var(--bg-color)]" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-[var(--text-color)] tracking-tight">Diego Garcia</h1>
-                  <p className="text-sm text-[var(--accent-color)] mt-0.5 font-medium">Ingeniero de Sistemas</p>
-                  <div className="flex items-center justify-center gap-1.5 mt-2 text-xs text-[var(--muted-color)]">
-                    <MapPin className="w-3.5 h-3.5" />
-                    <span>Tarija, Bolivia 🇧🇴</span>
-                  </div>
-                </div>
-                <p className="text-sm text-[var(--muted-color)] leading-relaxed max-w-xs mx-auto">
-                  Creo software que resuelve problemas reales — sistemas que la gente usa sin frustrarse, y que los equipos pueden mejorar sin complicaciones.
-                </p>
-                <div className="flex items-center justify-center gap-3">
-                  <a
-                    href={`mailto:${SOCIAL_LINKS.email}`}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--accent-color)] text-white text-sm font-medium"
-                  >
-                    <Mail className="w-3.5 h-3.5" />
-                    Contactar
-                  </a>
-                  <a
-                    href={SOCIAL_LINKS.github}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--border-color)] text-[var(--text-color)] text-sm font-medium hover:bg-[var(--hover-color)] transition-colors"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                    GitHub
-                  </a>
-                </div>
-              </div>
-
-              {/* Skills cards */}
-              <div>
-                <h2 className="text-xs font-mono uppercase tracking-widest text-[var(--muted-color)] mb-4">Lo que hago</h2>
-                <div className="grid grid-cols-2 gap-3">
-                  {SKILLS.map(({ icon: Icon, label, desc }) => (
-                    <div key={label} className="p-3.5 rounded-xl bg-[var(--sidebar-bg)] border border-[var(--border-color)] space-y-2">
-                      <div className="w-8 h-8 rounded-lg bg-[var(--accent-color)]/10 flex items-center justify-center">
-                        <Icon className="w-4 h-4 text-[var(--accent-color)]" />
-                      </div>
-                      <div>
-                        <p className="text-xs font-semibold text-[var(--text-color)]">{label}</p>
-                        <p className="text-[10px] text-[var(--muted-color)] mt-0.5 leading-relaxed">{desc}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* How I work */}
-              <div className="p-4 rounded-xl bg-[var(--sidebar-bg)] border border-[var(--border-color)]">
-                <h2 className="text-xs font-mono uppercase tracking-widest text-[var(--muted-color)] mb-3">Cómo trabajo</h2>
-                <p className="text-sm text-[var(--text-color)] leading-relaxed">
-                  Escribo código ordenado — que otro desarrollador pueda entender y modificar sin necesitarme presente. Me comunico bien con personas técnicas y no técnicas.
-                </p>
-              </div>
+              <ProfileSection />
             </motion.div>
           )}
 
@@ -304,60 +223,7 @@ export default function MobileLayout({
               transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
               className="px-5 py-8"
             >
-              <h2 className="text-xs font-mono uppercase tracking-widest text-[var(--muted-color)] mb-6">Proyectos</h2>
-              <div className="space-y-4">
-                {projects.map(proj => {
-                  const data = parseJSON<{
-                    projectName: string;
-                    role: string;
-                    description: string;
-                    techStack: string[];
-                    highlights: string[];
-                    status: string;
-                  }>(proj.content);
-                  if (!data) return null;
-                  return (
-                    <div key={proj.id} className="rounded-xl bg-[var(--sidebar-bg)] border border-[var(--border-color)] overflow-hidden">
-                      <div className="p-4 space-y-3">
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <h3 className="text-sm font-semibold text-[var(--text-color)] leading-tight">{data.projectName}</h3>
-                            <p className="text-xs text-[var(--accent-color)] mt-0.5">{data.role}</p>
-                          </div>
-                          <span className="shrink-0 text-[10px] font-mono px-2 py-0.5 rounded-full bg-[var(--active-color)] text-[var(--muted-color)] border border-[var(--border-color)]">
-                            {data.status}
-                          </span>
-                        </div>
-                        <p className="text-xs text-[var(--muted-color)] leading-relaxed">{data.description}</p>
-                        {data.highlights?.length > 0 && (
-                          <ul className="space-y-1.5">
-                            {data.highlights.map((h, i) => (
-                              <li key={i} className="flex items-start gap-2 text-xs text-[var(--text-color)]">
-                                <ChevronRight className="w-3.5 h-3.5 text-[var(--accent-color)] shrink-0 mt-0.5" />
-                                {h}
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                        <div className="flex flex-wrap gap-1.5 pt-1">
-                          {data.techStack?.map(t => (
-                            <span key={t} className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[var(--accent-color)]/10 text-[var(--accent-color)] border border-[var(--accent-color)]/20">
-                              {t}
-                            </span>
-                          ))}
-                        </div>
-                        <button
-                          onClick={() => onDoubleClickFile(proj)}
-                          className="w-full mt-1 flex items-center justify-center gap-2 py-2 rounded-lg border border-[var(--border-color)] text-xs text-[var(--muted-color)] hover:bg-[var(--hover-color)] hover:text-[var(--text-color)] transition-colors"
-                        >
-                          <Play className="w-3 h-3" fill="currentColor" />
-                          Ver detalles del proyecto
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              <ProjectsSection projects={projects} onDoubleClickFile={onDoubleClickFile} />
             </motion.div>
           )}
 
@@ -371,40 +237,7 @@ export default function MobileLayout({
               transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
               className="px-5 py-8 space-y-6"
             >
-              <h2 className="text-xs font-mono uppercase tracking-widest text-[var(--muted-color)]">Educación</h2>
-              <div className="p-4 rounded-xl bg-[var(--sidebar-bg)] border border-[var(--border-color)] space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-[var(--accent-color)]/10 flex items-center justify-center shrink-0">
-                    <GraduationCap className="w-5 h-5 text-[var(--accent-color)]" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-semibold text-[var(--text-color)] leading-tight">Licenciatura en Ingeniería de Sistemas</h3>
-                    <p className="text-xs text-[var(--accent-color)] mt-0.5">Universidad Católica Boliviana &ldquo;San Pablo&rdquo;</p>
-                    <p className="text-xs text-[var(--muted-color)] mt-0.5">Tarija, Bolivia · Titulado</p>
-                  </div>
-                </div>
-                <p className="text-xs text-[var(--muted-color)] leading-relaxed">
-                  Énfasis en desarrollo de software, bases de datos, redes y calidad. Proyectos integradores en equipo con roles definidos y entregables reales.
-                </p>
-              </div>
-
-              {certData?.certifications && (
-                <div>
-                  <h3 className="text-xs font-mono uppercase tracking-widest text-[var(--muted-color)] mb-3">Certificaciones</h3>
-                  <div className="space-y-2.5">
-                    {certData.certifications.map((c, i) => (
-                      <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-[var(--sidebar-bg)] border border-[var(--border-color)]">
-                        <span className="text-xs font-mono text-[var(--accent-color)] shrink-0 mt-0.5 w-8">{c.year.slice(-4)}</span>
-                        <div>
-                          <p className="text-xs font-medium text-[var(--text-color)]">{c.title}</p>
-                          {c.description && <p className="text-[10px] text-[var(--muted-color)] mt-0.5 leading-relaxed">{c.description}</p>}
-                          {c.institution && <p className="text-[10px] text-[var(--muted-color)]/70 mt-0.5">{c.institution}</p>}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+              <EducationSection certFile={certFile} />
             </motion.div>
           )}
 
@@ -418,87 +251,7 @@ export default function MobileLayout({
               transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
               className="px-5 py-8 space-y-6"
             >
-              <div className="text-center space-y-2">
-                <h2 className="text-xl font-bold text-[var(--text-color)]">Hablemos</h2>
-                <p className="text-sm text-[var(--muted-color)] leading-relaxed max-w-xs mx-auto">
-                  Estoy disponible para entrevistas, llamadas o simplemente preguntas sobre mi experiencia.
-                </p>
-              </div>
-
-              <div className="space-y-3">
-                <a
-                  href={`mailto:${SOCIAL_LINKS.email}`}
-                  className="flex items-center gap-4 p-4 rounded-xl bg-[var(--sidebar-bg)] border border-[var(--border-color)] hover:border-[var(--accent-color)] transition-colors group"
-                >
-                  <div className="w-10 h-10 rounded-lg bg-[var(--accent-color)]/10 flex items-center justify-center">
-                    <Mail className="w-5 h-5 text-[var(--accent-color)]" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-[var(--muted-color)] uppercase tracking-wide">Email</p>
-                    <p className="text-sm text-[var(--text-color)] truncate">{SOCIAL_LINKS.email}</p>
-                  </div>
-                  <ExternalLink className="w-4 h-4 text-[var(--muted-color)] group-hover:text-[var(--accent-color)] transition-colors shrink-0" />
-                </a>
-
-                <a
-                  href={SOCIAL_LINKS.whatsapp}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-4 p-4 rounded-xl bg-[var(--sidebar-bg)] border border-[var(--border-color)] hover:border-emerald-500 transition-colors group"
-                >
-                  <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                    <MessageCircle className="w-5 h-5 text-emerald-500" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-[var(--muted-color)] uppercase tracking-wide">WhatsApp</p>
-                    <p className="text-sm text-[var(--text-color)] truncate">+591 60265541</p>
-                  </div>
-                  <ExternalLink className="w-4 h-4 text-[var(--muted-color)] group-hover:text-emerald-500 transition-colors shrink-0" />
-                </a>
-
-                <a
-                  href={SOCIAL_LINKS.linkedin}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-4 p-4 rounded-xl bg-[var(--sidebar-bg)] border border-[var(--border-color)] hover:border-[var(--accent-color)] transition-colors group"
-                >
-                  <div className="w-10 h-10 rounded-lg bg-[var(--accent-color)]/10 flex items-center justify-center">
-                    <Briefcase className="w-5 h-5 text-[var(--accent-color)]" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-[var(--muted-color)] uppercase tracking-wide">LinkedIn</p>
-                    <p className="text-sm text-[var(--text-color)] truncate">linkedin.com/in/diego-garcia-ch</p>
-                  </div>
-                  <ExternalLink className="w-4 h-4 text-[var(--muted-color)] group-hover:text-[var(--accent-color)] transition-colors shrink-0" />
-                </a>
-
-                <a
-                  href={SOCIAL_LINKS.github}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-4 p-4 rounded-xl bg-[var(--sidebar-bg)] border border-[var(--border-color)] hover:border-[var(--accent-color)] transition-colors group"
-                >
-                  <div className="w-10 h-10 rounded-lg bg-[var(--accent-color)]/10 flex items-center justify-center">
-                    <Code2 className="w-5 h-5 text-[var(--accent-color)]" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-[var(--muted-color)] uppercase tracking-wide">GitHub</p>
-                    <p className="text-sm text-[var(--text-color)] truncate">github.com/dracmil4</p>
-                  </div>
-                  <ExternalLink className="w-4 h-4 text-[var(--muted-color)] group-hover:text-[var(--accent-color)] transition-colors shrink-0" />
-                </a>
-
-                <div className="flex items-center gap-4 p-4 rounded-xl bg-[var(--sidebar-bg)] border border-[var(--border-color)]">
-                  <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                    <MapPin className="w-5 h-5 text-emerald-500" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-xs font-semibold text-[var(--muted-color)] uppercase tracking-wide">Ubicación</p>
-                    <p className="text-sm text-[var(--text-color)]">Tarija, Bolivia 🇧🇴</p>
-                    <p className="text-xs text-[var(--muted-color)] mt-0.5">Disponible para trabajo remoto</p>
-                  </div>
-                </div>
-              </div>
+              <ContactSection />
             </motion.div>
           )}
 
