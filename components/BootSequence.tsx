@@ -29,14 +29,12 @@ const CODE_TO_TYPE = LINE_STRINGS.join('\n');
 const TOTAL_CHARS = CODE_TO_TYPE.length;
 
 const AUDIO_SRC = '/audio/keyboard-typing.mp3';
-const AUDIO_FALLBACK_DURATION = 19;
+const AUDIO_FALLBACK_DURATION = 5;
 
 const CHAR_WIDTH = 9.0;
 const LINE_HEIGHT = 20;
 const TEXT_START_X = 155;
 const TEXT_START_Y = 145;
-
-const CTA_LABEL = 'Iniciar Tour Guiado \uD83E\uDC82';
 
 type Phase = 'idle' | 'typing' | 'ready' | 'leaving';
 
@@ -142,7 +140,6 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<HTMLDivElement>(null);
   const mobileCardRef = useRef<HTMLDivElement>(null);
-  const ctaRef = useRef<HTMLButtonElement>(null);
   const proxyRef = useRef({ chars: 0 });
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const bootStartedRef = useRef(false);
@@ -221,8 +218,8 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
       });
     };
 
-    // La escritura dura lo mismo que el clip de audio (19 s aprox.) para que
-    // el tecleo suene en tiempo real y termine justo con "useful...".
+  // La escritura dura lo mismo que el clip de audio (5 s aprox.) para que
+  // el tecleo suene en tiempo real y termine justo con "useful...".
     if (audio) {
       getAudioDuration(audio, AUDIO_FALLBACK_DURATION).then(runTimeline);
     } else {
@@ -252,16 +249,6 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
     gsap.fromTo(
       target,
       { opacity: 0, y: 16 },
-      { opacity: 1, y: 0, duration: 0.8, ease: 'power2.out' },
-    );
-  }, [phase]);
-
-  // Fade-in suave del botón de transición al IDE.
-  useEffect(() => {
-    if (phase !== 'ready' || !ctaRef.current) return;
-    gsap.fromTo(
-      ctaRef.current,
-      { opacity: 0, y: 14 },
       { opacity: 1, y: 0, duration: 0.8, ease: 'power2.out' },
     );
   }, [phase]);
@@ -298,6 +285,24 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
     }, 1.1);
   }, [phase, isMobile, onComplete]);
 
+  // Transición al IDE sin botón: al mover el mouse, hacer clic o tocar la
+  // pantalla (como antes) se pasa directamente a la siguiente etapa.
+  useEffect(() => {
+    if (phase !== 'ready') return;
+    const handleSkip = () => triggerTransition();
+    const handleMove = () => triggerTransition();
+    window.addEventListener('keydown', handleSkip);
+    window.addEventListener('mousemove', handleMove, { once: true });
+    window.addEventListener('pointerdown', handleSkip);
+    window.addEventListener('touchstart', handleSkip, { once: true });
+    return () => {
+      window.removeEventListener('keydown', handleSkip);
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('pointerdown', handleSkip);
+      window.removeEventListener('touchstart', handleSkip);
+    };
+  }, [phase, triggerTransition]);
+
   if (!isMounted) return null;
 
   const showCursorPulse = typedChars >= TOTAL_CHARS;
@@ -311,7 +316,7 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
       >
         <div className="absolute top-8 left-8 md:top-10 md:left-12 font-mono text-sm">
           <span className="text-[#8FCB62]">root@diego:~$</span>
-          <span className="text-[#8b949e]"> Press any key to boot system </span>
+          <span className="text-[#8b949e]"> Presiona cualquier tecla para continuar </span>
           <span className="inline-block w-[0.6em] bg-[#8FCB62] text-[#8FCB62] animate-pulse">_</span>
         </div>
       </div>
@@ -394,17 +399,6 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
             <p className="text-[#f8f8f2] text-lg font-bold tracking-tight">Diego Garcia Chungara</p>
             <p className="text-[#bd93f9] text-sm">Ingeniero de Sistemas · Bolivia 🇧🇴</p>
           </div>
-
-          {phase === 'ready' && (
-            <button
-              ref={ctaRef}
-              onClick={triggerTransition}
-              style={{ opacity: 0, fontFamily: "'Inter', sans-serif" }}
-              className="mt-8 inline-flex items-center gap-2 rounded-xl border border-[#bd93f9]/50 bg-[#bd93f9]/10 px-6 py-3 text-sm font-medium text-white backdrop-blur-md shadow-lg shadow-black/40 transition-colors hover:border-[#bd93f9] hover:bg-[#bd93f9]/20"
-            >
-              {CTA_LABEL}
-            </button>
-          )}
         </div>
       </div>
     );
@@ -453,17 +447,6 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
             )}
           </svg>
         </div>
-
-        {phase === 'ready' && (
-          <button
-            ref={ctaRef}
-            onClick={triggerTransition}
-            style={{ opacity: 0, fontFamily: "'Inter', sans-serif" }}
-            className="mt-6 inline-flex items-center gap-2 rounded-xl border border-[#bd93f9]/50 bg-[#bd93f9]/10 px-6 py-3 text-sm font-medium text-white backdrop-blur-md shadow-lg shadow-black/40 transition-colors hover:border-[#bd93f9] hover:bg-[#bd93f9]/20 hover:shadow-[0_0_30px_rgba(189,147,249,0.35)]"
-          >
-            {CTA_LABEL}
-          </button>
-        )}
       </div>
     </div>
   );
