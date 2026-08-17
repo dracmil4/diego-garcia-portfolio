@@ -101,7 +101,7 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<HTMLDivElement>(null);
   const proxyRef = useRef({ chars: 0 });
-  const audioRef = useRef(new Audio('/audio/keyboard-typing.mp3'));
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     setIsMobile(window.innerWidth < 768);
@@ -110,7 +110,8 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
 
   // Audio config once; also ensure silence/cleanup when the component unmounts.
   useEffect(() => {
-    const audio = audioRef.current;
+    const audio = new Audio('/audio/keyboard-typing.mp3');
+    audioRef.current = audio;
     audio.volume = 0.4;
     audio.loop = true;
     return () => {
